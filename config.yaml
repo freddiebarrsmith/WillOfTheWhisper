@@ -1,0 +1,142 @@
+# WhisperControl Configuration
+
+# Activation modes: "hotkey", "voice", "both"
+activation_mode: "voice"  # Set to "voice" for hands-free, "both" to also use hotkey
+
+# Hotkey settings (only used if activation_mode includes "hotkey")
+hotkey:
+  enabled: true
+  key_combination: "shift+9"
+  mode: "push_to_talk"  # "push_to_talk" or "toggle"
+
+# Voice activation settings (only used if activation_mode includes "voice")
+voice_activation:
+  enabled: true
+  sensitivity: 0.5  # 0.0 to 1.0, higher = more sensitive
+  silence_timeout: 4.0  # seconds of silence before stopping recording (increased from 2.0)
+  min_recording_duration: 0.5  # minimum seconds to record
+  min_speech_frames: 3  # number of consecutive speech frames to trigger recording (lower = faster start)
+
+# Whisper model settings
+whisper:
+  model: "small"  # tiny, base, small, medium, large (small = better accuracy, still fast)
+  language: "en"  # "en" for English (British), null for auto-detection, or "es", etc.
+  accent: "british"  # "british" or "american" - helps with pronunciation understanding
+
+# Audio settings
+audio:
+  sample_rate: 16000
+  channels: 1
+  chunk_size: 1024
+
+# Output behavior
+output:
+  auto_paste: true  # automatically paste into active application
+  copy_to_clipboard: true  # also copy to clipboard
+  clear_clipboard_first: false  # clear clipboard before copying
+  use_smart_detection: true  # automatically detect AI assistants
+  fallback_to_generic: true  # use generic handler if no specific handler found
+
+# AI Assistant Integration Settings
+ai_assistants:
+  # Ducky One 2 Mac Handler (Mac Ultra 3 optimized)
+  ducky_mac:
+    enabled: true
+    priority: 95
+    shortcuts:
+      paste: "cmd+v"              # Optimized paste for Ducky One 2
+      paste_windows: "ctrl+v"      # Windows key + V equivalent
+      new_line: "enter"           # Ducky One 2 Enter key
+      tab: "tab"                  # Ducky One 2 Tab key
+      space: "space"              # Ducky One 2 Space key
+    detection:
+      app_names: []               # Always available on Mac
+      window_keywords: []
+    mac_optimizations:
+      apple_silicon_timing: true  # Optimize for Apple Silicon
+      ultra_3_delays: true        # Mac Ultra 3 specific timing
+      ducky_mode: "mac"           # Ducky One 2 Mac mode
+      windows_key_support: true   # Support Windows key + V
+  
+  # VS Code Roo Extension
+  vscode_roo:
+    enabled: true
+    priority: 90
+    shortcuts:
+      focus_chat: "cmd+shift+p"  # Command to focus Roo chat
+      open_roo: "cmd+shift+r"    # Command to open Roo
+    detection:
+      app_names: ["Visual Studio Code", "Code"]
+      window_keywords: ["roo", "ai assistant", "chat", "prompt"]
+  
+  # Cursor IDE
+  cursor:
+    enabled: true
+    priority: 85
+    shortcuts:
+      open_chat: "cmd+l"          # Command to open chat
+      open_composer: "cmd+k"      # Command to open composer
+    detection:
+      app_names: ["Cursor"]
+      window_keywords: ["cursor", "ai", "chat", "composer"]
+  
+  # Qwen Code
+  qwen_code:
+    enabled: true
+    priority: 80
+    shortcuts:
+      open_assistant: "cmd+shift+a"  # Command to open AI assistant
+      open_chat: "cmd+j"            # Command to open chat panel
+    detection:
+      app_names: ["Qwen Code", "Tongyi"]
+      window_keywords: ["qwen", "tongyi", "alibaba", "ai assistant"]
+  
+  # Amazon Q Developer and Amazon Q Chat
+  amazon_q:
+    enabled: true
+    priority: 88
+    shortcuts:
+      focus_chat: "cmd+l"  # Common shortcut for chat focus
+    detection:
+      app_names: ["Amazon Q", "AmazonQ", "AWS Q", "Q Developer"]
+      window_keywords: ["amazon q", "q developer", "q chat", "aws q", "q:"]
+  
+  # Terminal applications
+  terminal:
+    enabled: true
+    priority: 70
+    shortcuts: {}
+    detection:
+      app_names: ["Terminal", "iTerm", "iTerm2", "Warp", "Alacritty", "Kitty", "Hyper", "WezTerm", "Rio", "Tabby"]
+      window_keywords: ["terminal", "shell", "bash", "zsh", "fish", "ssh"]
+  
+  # OpenWebUI (browser-based)
+  openwebui:
+    enabled: true
+    priority: 87
+    shortcuts: {}
+    detection:
+      app_names: ["Safari", "Google Chrome", "Firefox", "Microsoft Edge", "Brave", "Arc", "Opera"]
+      window_keywords: ["openwebui", "open webui", "webui"]
+  
+  # Generic handler (fallback)
+  generic:
+    enabled: true
+    priority: 1
+    shortcuts: {}
+    detection:
+      app_names: []
+      window_keywords: []
+
+# User feedback
+feedback:
+  audio_notification: true  # play sound when recording starts/stops
+  visual_notification: true  # show system notification
+  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+
+# Advanced settings
+advanced:
+  temp_dir: "temp"
+  log_dir: "logs"
+  max_recording_duration: 30.0  # maximum seconds to record
+  cleanup_temp_files: true
