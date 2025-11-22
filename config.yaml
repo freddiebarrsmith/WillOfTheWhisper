@@ -105,6 +105,7 @@ ai_assistants:
   terminal:
     enabled: true
     priority: 70
+    auto_submit: true  # Automatically press Enter after pasting (set to false to just paste)
     shortcuts: {}
     detection:
       app_names: ["Terminal", "iTerm", "iTerm2", "Warp", "Alacritty", "Kitty", "Hyper", "WezTerm", "Rio", "Tabby"]
