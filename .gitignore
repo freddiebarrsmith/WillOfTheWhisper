@@ -146,3 +146,11 @@ tmp/
 
 # Whisper model files (downloaded automatically)
 models/
+
+# Audio recordings (may contain private data)
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.ogg
