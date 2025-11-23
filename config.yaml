@@ -139,7 +139,7 @@ feedback:
 gestures:
   enabled: true
   frame_rate: 30  # FPS for gesture recognition
-  show_preview: false  # Show camera preview window (disabled - OpenCV GUI issues on macOS)
+  show_preview: true  # Show camera preview window with visual feedback
   thumbs:
     enabled: true
     gesture_cooldown: 0.5  # seconds between gesture detections
