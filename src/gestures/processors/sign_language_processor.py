@@ -160,10 +160,14 @@ class SignLanguageProcessor(GestureProcessor):
             
             if i == 0:  # Thumb - special case (horizontal)
                 # Thumb is extended if tip is far from MCP horizontally
-                extended = abs(tip.x - mcp.x) > 0.1
+                # Check both x and y distance for thumb
+                dx = abs(tip.x - mcp.x)
+                dy = abs(tip.y - mcp.y)
+                extended = (dx > 0.08) or (dy > 0.08)  # More lenient
             else:  # Other fingers - vertical
-                # Finger is extended if tip is above PIP
-                extended = tip.y < pip.y
+                # Finger is extended if tip is above PIP (lower y value = higher on screen)
+                # Add some tolerance
+                extended = tip.y < pip.y - 0.02  # More lenient threshold
             
             fingers.append(extended)
         
@@ -178,8 +182,8 @@ class SignLanguageProcessor(GestureProcessor):
         middle_mcp = landmarks[9]
         hand_angle = math.atan2(middle_mcp.y - wrist.y, middle_mcp.x - wrist.x)
         
-        # A: Fist (all fingers down)
-        if not any(fingers):
+        # A: Fist (all fingers down) - check first before other signs
+        if not thumb and not index and not middle and not ring and not pinky:
             return 'A'
         
         # B: All fingers extended, thumb in
