@@ -118,24 +118,30 @@ class SignLanguageProcessor(GestureProcessor):
             fingers_extended = self._get_extended_fingers(landmarks, finger_tips, finger_pips, finger_mcps)
             
             # Detect specific signs (order matters - check more specific first)
-            if self.enable_common_signs:
-                common_sign = self._detect_common_signs(fingers_extended, landmarks, handedness)
-                if common_sign and common_sign != GestureType.UNKNOWN:
-                    return common_sign
-            
+            # Check fingerspelling first (most common use case)
             if self.enable_fingerspelling:
                 letter = self._detect_letter(fingers_extended, landmarks, handedness)
                 if letter:
                     gesture = self._letter_to_gesture_type(letter)
                     if gesture != GestureType.UNKNOWN:
+                        self.logger.debug(f"Detected letter: {letter}")
                         return gesture
             
+            # Check numbers
             if self.enable_numbers:
                 number = self._detect_number(fingers_extended, landmarks)
                 if number:
                     gesture = self._number_to_gesture_type(number)
                     if gesture != GestureType.UNKNOWN:
+                        self.logger.debug(f"Detected number: {number}")
                         return gesture
+            
+            # Check common signs last (thumbs up/down)
+            if self.enable_common_signs:
+                common_sign = self._detect_common_signs(fingers_extended, landmarks, handedness)
+                if common_sign and common_sign != GestureType.UNKNOWN:
+                    self.logger.debug(f"Detected common sign: {common_sign}")
+                    return common_sign
             
             return GestureType.UNKNOWN
             
@@ -396,8 +402,8 @@ class SignLanguageProcessor(GestureProcessor):
             return None
     
     def get_priority(self) -> int:
-        """High priority for sign language processor"""
-        return 90
+        """Highest priority for sign language processor (should run first)"""
+        return 110  # Higher than thumbs processor (100)
     
     def get_name(self) -> str:
         """Get processor name"""

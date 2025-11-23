@@ -56,13 +56,17 @@ if not recognizer:
     print("❌ Failed to create gesture recognizer")
     sys.exit(1)
 
-# Register callbacks for all sign types
+# Check which processor is active
 processor = recognizer.gesture_manager.get_active_processor()
 if processor:
+    print(f"Active processor: {processor.get_name()}")
     # Register for all gesture types
     for gesture_type in GestureType:
         if gesture_type != GestureType.UNKNOWN:
             recognizer.register_callback(gesture_type, sign_callback)
+else:
+    print("❌ No processor available")
+    sys.exit(1)
 
 print("\n" + "="*60)
 print("✅ Sign Language Recognition Ready!")
