@@ -135,6 +135,16 @@ feedback:
   visual_notification: true  # show system notification
   log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
 
+# Gesture recognition settings
+gestures:
+  enabled: true
+  frame_rate: 30  # FPS for gesture recognition
+  show_preview: false  # Show camera preview window (disabled - OpenCV GUI issues on macOS)
+  thumbs:
+    enabled: true
+    gesture_cooldown: 0.5  # seconds between gesture detections
+    confidence_threshold: 0.5  # 0.0 to 1.0, higher = more strict (lowered for easier detection)
+
 # Advanced settings
 advanced:
   temp_dir: "temp"
