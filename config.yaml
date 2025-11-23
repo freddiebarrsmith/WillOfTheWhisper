@@ -151,6 +151,14 @@ gestures:
     enable_fingerspelling: true  # Enable ASL alphabet recognition
     enable_numbers: true  # Enable ASL numbers 1-10
     enable_common_signs: true  # Enable common ASL signs
+    enable_word_signs: true  # Enable ASL word signs (HELLO, YES, NO, etc.)
+  word_recognition:
+    enabled: true  # Combine letters into words
+    letter_timeout: 2.0  # seconds to wait for next letter before completing word
+    min_word_length: 2  # minimum letters for a word
+    max_word_length: 20  # maximum letters in a word
+    enable_dictionary: true  # Use dictionary for word suggestions
+    auto_complete: true  # Auto-complete words on timeout
 
 # Advanced settings
 advanced:

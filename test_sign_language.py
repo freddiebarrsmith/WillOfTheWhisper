@@ -34,6 +34,12 @@ def sign_callback(gesture_type, data=None):
         print(f"✋ SIGN DETECTED: Number {number}")
         print(f"{'='*60}\n")
         detected_signs.append(number)
+    elif "Word" in sign_name:
+        word = sign_name.replace("Word ", "").replace("_", " ").title()
+        print(f"\n{'='*60}")
+        print(f"✋ ASL WORD SIGN: '{word}'")
+        print(f"{'='*60}\n")
+        detected_signs.append(word)
     elif "Thumbs" in sign_name:
         direction = "Up" if "Up" in sign_name else "Down"
         print(f"\n{'='*60}")
@@ -72,6 +78,8 @@ print("\n" + "="*60)
 print("✅ Sign Language Recognition Ready!")
 print("="*60)
 print("\n📹 Camera is active")
+print("\n✋ ASL WORD SIGNS:")
+print("   Show complete word signs: YES, NO, THANK YOU, PLEASE, etc.")
 print("\n✋ ASL ALPHABET:")
 print("   Show letters A-Z using ASL fingerspelling")
 print("\n🔢 ASL NUMBERS:")

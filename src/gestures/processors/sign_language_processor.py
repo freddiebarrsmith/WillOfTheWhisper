@@ -28,6 +28,7 @@ class SignLanguageProcessor(GestureProcessor):
         self.enable_fingerspelling = self._get_config_value("enable_fingerspelling", True)
         self.enable_numbers = self._get_config_value("enable_numbers", True)
         self.enable_common_signs = self._get_config_value("enable_common_signs", True)
+        self.enable_word_signs = self._get_config_value("enable_word_signs", True)  # ASL word signs
         self._initialize()
     
     def _initialize(self) -> None:
@@ -118,7 +119,14 @@ class SignLanguageProcessor(GestureProcessor):
             fingers_extended = self._get_extended_fingers(landmarks, finger_tips, finger_pips, finger_mcps)
             
             # Detect specific signs (order matters - check more specific first)
-            # Check fingerspelling first (most common use case)
+            # Check ASL word signs FIRST (most specific - whole words)
+            if self.enable_word_signs:
+                word_sign = self._detect_word_signs(fingers_extended, landmarks, handedness)
+                if word_sign and word_sign != GestureType.UNKNOWN:
+                    self.logger.debug(f"Detected word sign: {word_sign}")
+                    return word_sign
+            
+            # Check fingerspelling (letters)
             if self.enable_fingerspelling:
                 letter = self._detect_letter(fingers_extended, landmarks, handedness)
                 if letter:
@@ -349,8 +357,165 @@ class SignLanguageProcessor(GestureProcessor):
         
         return None
     
+    def _detect_word_signs(self, fingers: List[bool], landmarks, handedness: str) -> Optional[GestureType]:
+        """Detect ASL word signs (complete words, not letters)"""
+        thumb, index, middle, ring, pinky = fingers
+        
+        # Get key landmarks for position analysis
+        wrist = landmarks[0]
+        thumb_tip = landmarks[4]
+        index_tip = landmarks[8]
+        middle_tip = landmarks[12]
+        
+        # YES: Nodding motion (hard to detect statically, but can detect hand position)
+        # Simplified: Open hand moving up/down - for now, use open hand
+        if index and middle and ring and pinky and not thumb:
+            # Open hand could be YES (context dependent)
+            pass
+        
+        # NO: Index and middle finger together, moving side to side
+        # Static detection: Index and middle extended together
+        if index and middle and not ring and not pinky:
+            # Could be NO, but also could be U or V - need motion
+            distance = abs(index_tip.x - middle_tip.x)
+            if distance < 0.03:  # Very close together
+                # Check if hand is in NO position (sideways)
+                hand_angle = math.atan2(middle_tip.y - wrist.y, middle_tip.x - wrist.x)
+                if abs(hand_angle) > 0.5:  # Hand rotated
+                    return GestureType.WORD_NO
+        
+        # THANK YOU: Hand moving from chin forward
+        # Static: Open hand near face - hard to detect without face landmarks
+        # For now, use open hand (B) as potential THANK YOU
+        if index and middle and ring and pinky and not thumb:
+            # Check if hand is elevated (could be near face)
+            if wrist.y < 0.5:  # Hand in upper half of frame
+                return GestureType.WORD_THANK_YOU
+        
+        # PLEASE: Circular motion with flat hand on chest
+        # Static: Flat hand (B) in center
+        if index and middle and ring and pinky and not thumb:
+            if 0.3 < wrist.y < 0.7:  # Middle of frame
+                return GestureType.WORD_PLEASE
+        
+        # SORRY: Fist rotating on chest
+        # Static: Fist (A) in center
+        if not thumb and not index and not middle and not ring and not pinky:
+            if 0.3 < wrist.y < 0.7:
+                return GestureType.WORD_SORRY
+        
+        # HELP: One hand tapping other (requires two hands, simplified)
+        # Static: Open hand (B) could indicate HELP
+        if index and middle and ring and pinky and not thumb:
+            if wrist.y > 0.6:  # Lower in frame
+                return GestureType.WORD_HELP
+        
+        # WATER: W tapping chin
+        # Static: W shape (index, middle, ring extended)
+        if index and middle and ring and not pinky:
+            if wrist.y < 0.5:  # Upper half (near face)
+                return GestureType.WORD_WATER
+        
+        # FOOD: Fingers to mouth
+        # Static: Fingers extended, hand elevated
+        if index and middle and ring and pinky:
+            if wrist.y < 0.4:  # Very high (near mouth)
+                return GestureType.WORD_FOOD
+        
+        # BATHROOM: T shape shaking
+        # Static: T shape (thumb between index and middle)
+        if not index and not middle and thumb and not ring and not pinky:
+            return GestureType.WORD_BATHROOM
+        
+        # GOOD: Flat hand moving forward from mouth
+        # Static: Open hand (B) elevated
+        if index and middle and ring and pinky and not thumb:
+            if wrist.y < 0.5:
+                return GestureType.WORD_GOOD
+        
+        # BAD: Flat hand down
+        # Static: Open hand (B) lower
+        if index and middle and ring and pinky and not thumb:
+            if wrist.y > 0.6:
+                return GestureType.WORD_BAD
+        
+        # HAPPY: Hand brushing up face
+        # Static: Open hand (B) near face
+        if index and middle and ring and pinky and not thumb:
+            if wrist.y < 0.4 and wrist.x < 0.6:
+                return GestureType.WORD_HAPPY
+        
+        # SAD: Hand down face
+        # Static: Open hand (B) lower on face
+        if index and middle and ring and pinky and not thumb:
+            if 0.4 < wrist.y < 0.6:
+                return GestureType.WORD_SAD
+        
+        # LOVE: Crossed arms on chest (requires two hands, simplified)
+        # Static: X shape or crossed fingers
+        if index and middle:
+            # Check if fingers are crossed
+            if abs(index_tip.x - middle_tip.x) < 0.02:
+                return GestureType.WORD_LOVE
+        
+        # MORE: Fingers tapping together
+        # Static: Fingers together (O shape)
+        if thumb and index:
+            distance = math.sqrt((thumb_tip.x - index_tip.x)**2 + (thumb_tip.y - index_tip.y)**2)
+            if distance < 0.03:
+                return GestureType.WORD_MORE
+        
+        # STOP: Flat hand forward
+        # Static: Open hand (B) forward
+        if index and middle and ring and pinky and not thumb:
+            # Hand extended forward
+            if 0.4 < wrist.y < 0.7:
+                return GestureType.WORD_STOP
+        
+        # GO: Pointing forward
+        # Static: Index pointing (G or D)
+        if index and not middle and not ring and not pinky:
+            return GestureType.WORD_GO
+        
+        # COME: Hand motioning toward self (requires motion, simplified)
+        # Static: Open hand (B)
+        if index and middle and ring and pinky and not thumb:
+            if wrist.x < 0.5:  # Left side (toward self)
+                return GestureType.WORD_COME
+        
+        # WHERE: Index moving side to side
+        # Static: Index pointing (G)
+        if index and not middle and not ring and not pinky:
+            if wrist.y < 0.5:
+                return GestureType.WORD_WHERE
+        
+        # WHAT: Open hands moving
+        # Static: Open hand (B)
+        if index and middle and ring and pinky and not thumb:
+            if 0.3 < wrist.y < 0.6:
+                return GestureType.WORD_WHAT
+        
+        # WHEN: Index pointing up
+        # Static: Index pointing (G) elevated
+        if index and not middle and not ring and not pinky:
+            if wrist.y < 0.4:
+                return GestureType.WORD_WHEN
+        
+        # WHY: Y shape moving
+        # Static: Y shape (thumb and pinky)
+        if thumb and pinky and not index and not middle and not ring:
+            return GestureType.WORD_WHY
+        
+        # HOW: Hands together moving
+        # Static: Open hands (B) together
+        if index and middle and ring and pinky and not thumb:
+            if 0.4 < wrist.y < 0.7:
+                return GestureType.WORD_HOW
+        
+        return None
+    
     def _detect_common_signs(self, fingers: List[bool], landmarks, handedness: str) -> Optional[GestureType]:
-        """Detect common ASL signs"""
+        """Detect common ASL signs (thumbs up/down, etc.)"""
         thumb, index, middle, ring, pinky = fingers
         
         # Thumbs up (already handled, but keep for compatibility)

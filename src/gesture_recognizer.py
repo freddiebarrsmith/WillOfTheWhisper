@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional, Callable
 import cv2
 
 from gestures import GestureManager, GestureType
+from word_recognizer import WordRecognizer
 
 
 class GestureRecognizer:
@@ -18,10 +19,14 @@ class GestureRecognizer:
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.gesture_manager = GestureManager(config)
+        self.word_recognizer = WordRecognizer(config)
         self.running = False
         self.thread: Optional[threading.Thread] = None
         self.frame_rate = config.get("gestures", {}).get("frame_rate", 30)
         self.show_preview = config.get("gestures", {}).get("show_preview", False)
+        
+        # Register word callback
+        self.word_recognizer.register_word_callback(self._on_word_recognized)
     
     def start(self) -> bool:
         """Start gesture recognition in a background thread"""
@@ -71,6 +76,13 @@ class GestureRecognizer:
                 
                 # Process the frame
                 gesture = self.gesture_manager.process_frame(frame)
+                
+                # Handle word recognition for letters
+                if gesture and gesture.value.startswith("letter_"):
+                    letter = gesture.value.replace("letter_", "").upper()
+                    word = self.word_recognizer.add_letter(letter)
+                    if word:
+                        self.word_recognizer._trigger_word_callbacks(word)
                 
                 # Show preview if enabled (skip if it fails - GUI may not be available)
                 if self.show_preview:
@@ -159,6 +171,22 @@ class GestureRecognizer:
     def is_running(self) -> bool:
         """Check if recognizer is running"""
         return self.running
+    
+    def _on_word_recognized(self, word: str) -> None:
+        """Callback when a word is recognized"""
+        self.logger.info(f"Word recognized: {word}")
+    
+    def register_word_callback(self, callback: Callable) -> None:
+        """Register a callback for when words are recognized"""
+        self.word_recognizer.register_word_callback(callback)
+    
+    def get_current_word(self) -> str:
+        """Get the current word being built"""
+        return self.word_recognizer.get_current_word()
+    
+    def force_complete_word(self) -> Optional[str]:
+        """Force complete the current word (e.g., on space gesture)"""
+        return self.word_recognizer.force_complete_word()
 
 
 def create_gesture_recognizer(config: Dict[str, Any]) -> Optional[GestureRecognizer]:
