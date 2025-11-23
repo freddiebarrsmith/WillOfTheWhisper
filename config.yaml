@@ -144,6 +144,13 @@ gestures:
     enabled: true
     gesture_cooldown: 0.5  # seconds between gesture detections
     confidence_threshold: 0.5  # 0.0 to 1.0, higher = more strict (lowered for easier detection)
+  sign_language:
+    enabled: true
+    sign_cooldown: 1.0  # seconds between sign detections
+    confidence_threshold: 0.5  # 0.0 to 1.0, higher = more strict
+    enable_fingerspelling: true  # Enable ASL alphabet recognition
+    enable_numbers: true  # Enable ASL numbers 1-10
+    enable_common_signs: true  # Enable common ASL signs
 
 # Advanced settings
 advanced:

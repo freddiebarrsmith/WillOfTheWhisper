@@ -12,7 +12,61 @@ class GestureType(Enum):
     """Types of gestures that can be recognized"""
     THUMBS_UP = "thumbs_up"
     THUMBS_DOWN = "thumbs_down"
+    # ASL Letters
+    LETTER_A = "letter_a"
+    LETTER_B = "letter_b"
+    LETTER_C = "letter_c"
+    LETTER_D = "letter_d"
+    LETTER_E = "letter_e"
+    LETTER_F = "letter_f"
+    LETTER_G = "letter_g"
+    LETTER_H = "letter_h"
+    LETTER_I = "letter_i"
+    LETTER_L = "letter_l"
+    LETTER_M = "letter_m"
+    LETTER_N = "letter_n"
+    LETTER_O = "letter_o"
+    LETTER_P = "letter_p"
+    LETTER_Q = "letter_q"
+    LETTER_R = "letter_r"
+    LETTER_S = "letter_s"
+    LETTER_T = "letter_t"
+    LETTER_U = "letter_u"
+    LETTER_V = "letter_v"
+    LETTER_W = "letter_w"
+    LETTER_X = "letter_x"
+    LETTER_Y = "letter_y"
+    # ASL Numbers
+    NUMBER_1 = "number_1"
+    NUMBER_2 = "number_2"
+    NUMBER_3 = "number_3"
+    NUMBER_4 = "number_4"
+    NUMBER_5 = "number_5"
+    NUMBER_6 = "number_6"
+    NUMBER_7 = "number_7"
+    NUMBER_8 = "number_8"
+    NUMBER_9 = "number_9"
+    NUMBER_10 = "number_10"
     UNKNOWN = "unknown"
+    
+    @classmethod
+    def from_letter(cls, letter: str) -> 'GestureType':
+        """Convert letter string to GestureType"""
+        letter_upper = letter.upper()
+        try:
+            return cls[f"LETTER_{letter_upper}"]
+        except KeyError:
+            return cls.UNKNOWN
+    
+    @classmethod
+    def from_number(cls, number: int) -> 'GestureType':
+        """Convert number to GestureType"""
+        try:
+            if 1 <= number <= 10:
+                return cls[f"NUMBER_{number}"]
+        except KeyError:
+            pass
+        return cls.UNKNOWN
 
 
 class GestureProcessor(ABC):
@@ -22,9 +76,9 @@ class GestureProcessor(ABC):
         self.config = config
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self.enabled = self._get_config_value("enabled", True)
+        # Initialize callbacks for all gesture types
         self.callbacks: Dict[GestureType, List[Callable]] = {
-            GestureType.THUMBS_UP: [],
-            GestureType.THUMBS_DOWN: [],
+            gt: [] for gt in GestureType
         }
     
     def _get_config_value(self, key: str, default: Any) -> Any:
@@ -99,10 +153,12 @@ class GestureManager:
         try:
             # Import all processor modules
             from .processors.thumbs_processor import ThumbsProcessor
+            from .processors.sign_language_processor import SignLanguageProcessor
             
             # Create processor instances
             processor_classes = [
-                ThumbsProcessor,  # Primary processor for thumbs up/down
+                SignLanguageProcessor,  # Full sign language support (higher priority)
+                ThumbsProcessor,  # Simple thumbs up/down
             ]
             
             for processor_class in processor_classes:
